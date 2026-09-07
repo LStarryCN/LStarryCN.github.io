@@ -2,7 +2,7 @@
 
 ## 视觉参考
 
-- 本次沉浸式首页、三段式悬浮导航、资料弹窗与右侧工具栏的层级和交互方式，参考了 [JingYue](https://cf-blog.j1ngyue.cn/) 以及站点所有者提供的页面截图。
+- 本次沉浸式首页、三段式悬浮导航、头像资料卡与右侧工具栏的层级和交互方式，参考了 [JingYue](https://cf-blog.j1ngyue.cn/) 以及站点所有者提供的页面截图。
 - 早期玻璃拟态与 Bento Grid 方向曾参考 [XinghuisamaBlogs](https://github.com/heiehiehi/XinghuisamaBlogs)，其仓库标注为 [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/)。
 
 所有页面、组件、文案和数据结构均针对 LStarry 重新实现，没有复制参考站点的头像、背景、封面、文章、个人数据或远程图片，也没有直接复用参考站点源码。

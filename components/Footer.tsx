@@ -11,7 +11,7 @@ export function Footer() {
       </div>
       <div className="footer-links">
         <a href={siteConfig.github} target="_blank" rel="noreferrer"><GitBranch size={17} /> GitHub</a>
-        <Link href="/atom.xml"><Rss size={17} /> RSS</Link>
+        <Link href="/atom.xml" prefetch={false}><Rss size={17} /> RSS</Link>
       </div>
     </footer>
   );

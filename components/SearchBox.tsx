@@ -44,7 +44,7 @@ export function SearchBox({ posts }: { posts: PostMeta[] }) {
       {normalized ? (
         <div className="search-suggestions">
           {matches.length ? matches.map((post) => (
-            <Link href={postHref(post.slug)} key={post.slug}>
+            <Link href={postHref(post.slug)} key={post.slug} prefetch={false}>
               <span>{post.title}</span>
               <small>{post.category} · {post.readingTime} 分钟</small>
             </Link>

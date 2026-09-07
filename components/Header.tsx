@@ -6,6 +6,7 @@ import {
   ArrowUpRight,
   ChevronDown,
   GitBranch,
+  Mail,
   Menu,
   Rss,
   Search,
@@ -163,7 +164,7 @@ function SearchDialog({
         <div className="search-result-label">{normalized ? "搜索结果" : "最近文章"}</div>
         <div className="global-search-results">
           {matches.length ? matches.map((post) => (
-            <Link href={postHref(post.slug)} onClick={onClose} key={post.slug}>
+            <Link href={postHref(post.slug)} onClick={onClose} key={post.slug} prefetch={false}>
               <span><strong>{post.title}</strong><small>{post.description}</small></span>
               <span className="search-result-meta">{post.subcategory || post.category}<ArrowUpRight size={16} /></span>
             </Link>
@@ -171,7 +172,7 @@ function SearchDialog({
             <p>没有匹配的文章。可以换一个关键词，或前往文章归档继续筛选。</p>
           )}
         </div>
-        <Link className="search-archive-link" href="/posts/" onClick={onClose}>
+        <Link className="search-archive-link" href="/posts/" onClick={onClose} prefetch={false}>
           <Archive size={17} /> 打开文章归档
         </Link>
       </section>
@@ -181,32 +182,30 @@ function SearchDialog({
 
 type HeatmapDay = { date: string; count: number };
 
-function ArticleHeatmap({ posts }: { posts: PostMeta[] }) {
-  const [days, setDays] = useState<HeatmapDay[]>([]);
+function getHeatmapDays(posts: PostMeta[]): HeatmapDay[] {
+  const counts = new Map<string, number>();
+  posts.forEach((post) => counts.set(post.date, (counts.get(post.date) || 0) + 1));
 
-  useEffect(() => {
-    const counts = new Map<string, number>();
-    posts.forEach((post) => counts.set(post.date, (counts.get(post.date) || 0) + 1));
+  const parts = new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    timeZone: "Asia/Shanghai",
+  }).formatToParts(new Date());
+  const read = (type: "year" | "month" | "day") => Number(parts.find((part) => part.type === type)?.value);
+  const today = new Date(Date.UTC(read("year"), read("month") - 1, read("day")));
+  const start = new Date(today);
+  start.setUTCDate(today.getUTCDate() - (14 * 7 - 1));
 
-    const parts = new Intl.DateTimeFormat("en-US", {
-      year: "numeric",
-      month: "numeric",
-      day: "numeric",
-      timeZone: "Asia/Shanghai",
-    }).formatToParts(new Date());
-    const read = (type: "year" | "month" | "day") => Number(parts.find((part) => part.type === type)?.value);
-    const today = new Date(Date.UTC(read("year"), read("month") - 1, read("day")));
-    const start = new Date(today);
-    start.setUTCDate(today.getUTCDate() - (14 * 7 - 1));
+  return Array.from({ length: 14 * 7 }, (_, index) => {
+    const date = new Date(start);
+    date.setUTCDate(start.getUTCDate() + index);
+    const key = date.toISOString().slice(0, 10);
+    return { date: key, count: counts.get(key) || 0 };
+  });
+}
 
-    const nextDays = Array.from({ length: 14 * 7 }, (_, index) => {
-      const date = new Date(start);
-      date.setUTCDate(start.getUTCDate() + index);
-      const key = date.toISOString().slice(0, 10);
-      return { date: key, count: counts.get(key) || 0 };
-    });
-    setDays(nextDays);
-  }, [posts]);
+function ArticleHeatmap({ days }: { days: HeatmapDay[] }) {
 
   return (
     <div className="article-heatmap" aria-label="过去十四周的文章发布活动">
@@ -223,33 +222,29 @@ function ArticleHeatmap({ posts }: { posts: PostMeta[] }) {
   );
 }
 
-function ProfileDialog({
+function ProfileCard({
   open,
-  posts,
+  days,
+  postCount,
   onClose,
 }: {
   open: boolean;
-  posts: PostMeta[];
+  days: HeatmapDay[];
+  postCount: number;
   onClose: () => void;
 }) {
-  const panelRef = useDialogFocus(open, onClose);
   if (!open) return null;
 
-  const closeFromBackdrop = (event: ReactMouseEvent<HTMLDivElement>) => {
-    if (event.target === event.currentTarget) onClose();
-  };
-
   return (
-    <div className="dialog-backdrop profile-backdrop" onMouseDown={closeFromBackdrop}>
+    <>
+      <button className="profile-card-scrim" type="button" onClick={onClose} aria-label="关闭个人资料" />
       <section
         aria-labelledby="profile-dialog-title"
-        aria-modal="true"
-        className="profile-dialog"
-        ref={panelRef}
+        className="profile-card"
+        id="profile-card"
         role="dialog"
-        tabIndex={-1}
       >
-        <button className="profile-dialog-close" data-autofocus type="button" onClick={onClose} aria-label="关闭个人资料">
+        <button className="profile-dialog-close" type="button" onClick={onClose} aria-label="关闭个人资料">
           <X size={20} />
         </button>
         <div className="profile-main">
@@ -258,23 +253,25 @@ function ProfileDialog({
             <div>
               <span>个人资料</span>
               <h2 id="profile-dialog-title">LStarry</h2>
-              <p>软件工程本科生</p>
+              <p>{siteConfig.role}</p>
             </div>
           </div>
           <p className="profile-dialog-copy">
-            我是 LStarry。这里主要记录算法、开发和一些日常想法。
+            {siteConfig.description}
           </p>
           <div className="profile-links">
             <a href={siteConfig.github} target="_blank" rel="noreferrer"><GitBranch size={18} /> GitHub</a>
-            <Link href="/posts/" onClick={onClose}><Archive size={18} /> 文章归档</Link>
-            <Link href="/atom.xml" onClick={onClose}><Rss size={18} /> RSS</Link>
+            {siteConfig.social.email ? (
+              <a href={`mailto:${siteConfig.social.email}`}><Mail size={18} /> 邮箱</a>
+            ) : null}
+            <Link href="/posts/" onClick={onClose} prefetch={false}><Archive size={18} /> 文章归档</Link>
+            <Link href="/atom.xml" onClick={onClose} prefetch={false}><Rss size={18} /> RSS</Link>
           </div>
           <div className="profile-activity-heading">
             <span>过去 14 周文章活动</span>
-            <strong>{posts.length} 篇文章</strong>
+            <strong>{postCount} 篇文章</strong>
           </div>
-          <ArticleHeatmap posts={posts} />
-          <p className="heatmap-note">深色方格仅代表真实发布日期，没有文章的日期保持空白。</p>
+          <ArticleHeatmap days={days} />
         </div>
         <aside className="profile-facts">
           <div className="profile-live-time">
@@ -283,12 +280,12 @@ function ProfileDialog({
           </div>
           <dl>
             <div><dt>建站时间</dt><dd>{formatDate(siteConfig.buildDate.slice(0, 10))}</dd></div>
-            <div><dt>文章数量</dt><dd>{posts.length} 篇</dd></div>
-            <div><dt>内容方向</dt><dd>算法 · 开发 · 随笔</dd></div>
+            <div><dt>文章数量</dt><dd>{postCount} 篇</dd></div>
+            <div><dt>内容方向</dt><dd>{siteConfig.currentStatus.learning.join("、")}</dd></div>
           </dl>
         </aside>
       </section>
-    </div>
+    </>
   );
 }
 
@@ -334,6 +331,7 @@ function MobileDrawer({
                 className={isActivePath(pathname, item.href) ? "active" : ""}
                 href={item.href}
                 onClick={onClose}
+                prefetch={false}
               >
                 {item.label}<ArrowUpRight size={16} />
               </Link>
@@ -345,6 +343,7 @@ function MobileDrawer({
                       href={child.href}
                       onClick={onClose}
                       key={child.href}
+                      prefetch={false}
                     >{child.label}</Link>
                   ))}
                 </div>
@@ -364,28 +363,33 @@ function MobileDrawer({
 
 function FloatingTools({ onProfile }: { onProfile: () => void }) {
   const [showTop, setShowTop] = useState(false);
+  const sentinelRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
-    const update = () => setShowTop(window.scrollY > 480);
-    update();
-    window.addEventListener("scroll", update, { passive: true });
-    return () => window.removeEventListener("scroll", update);
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(([entry]) => setShowTop(!entry.isIntersecting));
+    observer.observe(sentinel);
+    return () => observer.disconnect();
   }, []);
 
   return (
-    <aside className="floating-tools" aria-label="页面工具">
-      <button type="button" onClick={onProfile} aria-label="打开个人资料" title="个人资料"><UserRound size={20} /></button>
-      <ThemeToggle />
-      <button
-        aria-hidden={!showTop}
-        className={showTop ? "" : "is-hidden"}
-        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-        tabIndex={showTop ? 0 : -1}
-        type="button"
-        aria-label="返回顶部"
-        title="返回顶部"
-      ><ArrowUp size={20} /></button>
-    </aside>
+    <>
+      <span className="scroll-top-sentinel" ref={sentinelRef} aria-hidden="true" />
+      <aside className="floating-tools" aria-label="页面工具">
+        <button type="button" onClick={onProfile} aria-label="打开个人资料" title="个人资料"><UserRound size={20} /></button>
+        <ThemeToggle />
+        <button
+          aria-hidden={!showTop}
+          className={showTop ? "" : "is-hidden"}
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          tabIndex={showTop ? 0 : -1}
+          type="button"
+          aria-label="返回顶部"
+          title="返回顶部"
+        ><ArrowUp size={20} /></button>
+      </aside>
+    </>
   );
 }
 
@@ -395,20 +399,55 @@ export function Header({ posts }: { posts: PostMeta[] }) {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [shortcut, setShortcut] = useState("Ctrl K");
   const [indicator, setIndicator] = useState<Indicator | null>(null);
+  const [hoveredHref, setHoveredHref] = useState<string | null>(null);
   const headerRef = useRef<HTMLElement>(null);
+  const profileZoneRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const closeTimer = useRef<number | null>(null);
+  const profileCloseTimer = useRef<number | null>(null);
+  const activeHref = siteConfig.navigation.find((item) => isActivePath(pathname, item.href))?.href || "/";
+  const heatmapDays = useMemo(() => getHeatmapDays(posts), [posts]);
 
   const closePanel = useCallback(() => setPanel(null), []);
   const openPanel = useCallback((nextPanel: Exclude<Panel, null>) => {
     setOpenDropdown(null);
     setPanel(nextPanel);
   }, []);
+  const closeProfile = useCallback(() => {
+    setPanel((current) => current === "profile" ? null : current);
+  }, []);
+  const cancelProfileClose = () => {
+    if (profileCloseTimer.current) window.clearTimeout(profileCloseTimer.current);
+  };
+  const scheduleProfileClose = () => {
+    cancelProfileClose();
+    profileCloseTimer.current = window.setTimeout(closeProfile, 180);
+  };
+  const openProfile = () => {
+    cancelProfileClose();
+    openPanel("profile");
+  };
+
+  useEffect(() => {
+    const loadBodyFont = () => { void import("@fontsource-variable/noto-sans-sc"); };
+    let frame = window.requestAnimationFrame(() => {
+      frame = window.requestAnimationFrame(loadBodyFont);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  const measureIndicator = useCallback((href: string) => {
+    const item = itemRefs.current[href];
+    if (!item) return;
+    const next = { x: item.offsetLeft, width: item.offsetWidth };
+    setIndicator((current) => current?.x === next.x && current.width === next.width ? current : next);
+  }, []);
 
   useEffect(() => {
     setPanel(null);
     setOpenDropdown(null);
+    setHoveredHref(null);
   }, [pathname]);
 
   useEffect(() => {
@@ -429,13 +468,12 @@ export function Header({ posts }: { posts: PostMeta[] }) {
     if (!nav) return;
 
     let frame = 0;
+    let active = true;
     const update = () => {
-      const active = siteConfig.navigation.find((item) => isActivePath(pathname, item.href));
-      const item = active ? itemRefs.current[active.href] : null;
-      if (!item) return;
-      setIndicator({ x: item.offsetLeft, width: item.offsetWidth });
+      measureIndicator(hoveredHref || activeHref);
     };
     const queueUpdate = () => {
+      if (!active) return;
       window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(update);
     };
@@ -446,19 +484,27 @@ export function Header({ posts }: { posts: PostMeta[] }) {
     document.fonts?.ready.then(queueUpdate);
     window.addEventListener("resize", queueUpdate);
     return () => {
+      active = false;
       window.cancelAnimationFrame(frame);
       observer.disconnect();
       window.removeEventListener("resize", queueUpdate);
     };
-  }, [pathname]);
+  }, [activeHref, hoveredHref, measureIndicator]);
+
+  useEffect(() => () => {
+    if (closeTimer.current) window.clearTimeout(closeTimer.current);
+    if (profileCloseTimer.current) window.clearTimeout(profileCloseTimer.current);
+  }, []);
 
   useEffect(() => {
     const handlePointerDown = (event: PointerEvent) => {
-      if (!headerRef.current?.contains(event.target as Node)) setOpenDropdown(null);
+      const target = event.target as Node;
+      if (!headerRef.current?.contains(target)) setOpenDropdown(null);
+      if (!profileZoneRef.current?.contains(target)) closeProfile();
     };
     document.addEventListener("pointerdown", handlePointerDown);
     return () => document.removeEventListener("pointerdown", handlePointerDown);
-  }, []);
+  }, [closeProfile]);
 
   const cancelClose = () => {
     if (closeTimer.current) window.clearTimeout(closeTimer.current);
@@ -468,11 +514,15 @@ export function Header({ posts }: { posts: PostMeta[] }) {
     closeTimer.current = window.setTimeout(() => setOpenDropdown(null), 140);
   };
   const handleHeaderKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
-    if (event.key === "Escape" && openDropdown) {
+    if (event.key !== "Escape") return;
+    if (openDropdown) {
       event.preventDefault();
       const href = openDropdown;
       setOpenDropdown(null);
       itemRefs.current[href]?.querySelector<HTMLButtonElement>(".nav-dropdown-toggle")?.focus();
+    } else if (panel === "profile") {
+      event.preventDefault();
+      closeProfile();
     }
   };
   const focusFirstDropdownLink = (href: string) => {
@@ -485,35 +535,79 @@ export function Header({ posts }: { posts: PostMeta[] }) {
     <>
       <header className="site-header" ref={headerRef} onKeyDown={handleHeaderKeyDown}>
         <nav className="header-shell" aria-label="主导航">
-          <div className="brand-pill nav-glass">
-            <button type="button" onClick={() => openPanel("profile")} aria-label="打开 LStarry 个人资料">
-              <span className="brand-avatar" aria-hidden="true" />
-            </button>
-            <Link href="/" aria-label="LStarry 首页">
-              <strong>LStarry</strong><span>の 星屿</span>
-            </Link>
+          <div
+            className="brand-zone"
+            ref={profileZoneRef}
+            onPointerLeave={(event) => { if (event.pointerType === "mouse") scheduleProfileClose(); }}
+            onFocusCapture={cancelProfileClose}
+            onBlurCapture={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) scheduleProfileClose();
+            }}
+          >
+            <div className="brand-pill nav-glass">
+              <button
+                aria-controls="profile-card"
+                aria-expanded={panel === "profile"}
+                aria-haspopup="dialog"
+                aria-label={panel === "profile" ? "关闭 LStarry 个人资料" : "打开 LStarry 个人资料"}
+                type="button"
+                onClick={() => panel === "profile" ? closeProfile() : openProfile()}
+                onPointerEnter={(event) => { if (event.pointerType === "mouse") openProfile(); }}
+              >
+                <span className="brand-avatar" aria-hidden="true" />
+              </button>
+              <Link href="/" aria-label="LStarry 首页" prefetch={false}>
+                <strong>LStarry</strong><span>の 星屿</span>
+              </Link>
+            </div>
+            <ProfileCard
+              days={heatmapDays}
+              open={panel === "profile"}
+              onClose={closeProfile}
+              postCount={posts.length}
+            />
           </div>
 
-          <div className={indicator ? "primary-nav-pill nav-glass indicator-ready" : "primary-nav-pill nav-glass"} ref={navRef}>
+          <div
+            className={indicator ? "primary-nav-pill nav-glass indicator-ready" : "primary-nav-pill nav-glass"}
+            ref={navRef}
+            onMouseLeave={() => {
+              setHoveredHref(null);
+              measureIndicator(activeHref);
+            }}
+            onBlur={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                setHoveredHref(null);
+                measureIndicator(activeHref);
+              }
+            }}
+          >
             {indicator ? (
               <span
                 aria-hidden="true"
                 className="nav-active-indicator"
-                style={{ left: indicator.x, width: indicator.width }}
+                style={{ transform: `translate3d(${indicator.x}px, 0, 0)`, width: indicator.width }}
               />
             ) : null}
             {siteConfig.navigation.map((item) => {
               const active = isActivePath(pathname, item.href);
+              const visualActive = hoveredHref ? hoveredHref === item.href : active;
               const hasChildren = "children" in item;
               const expanded = openDropdown === item.href;
               return (
                 <div
-                  className={active ? "nav-entry active" : "nav-entry"}
+                  className={visualActive ? "nav-entry visual-active" : "nav-entry"}
                   key={item.href}
                   ref={(node) => { itemRefs.current[item.href] = node; }}
                   onMouseEnter={() => {
                     cancelClose();
+                    setHoveredHref(item.href);
+                    measureIndicator(item.href);
                     if (hasChildren) setOpenDropdown(item.href);
+                  }}
+                  onFocusCapture={() => {
+                    setHoveredHref(item.href);
+                    measureIndicator(item.href);
                   }}
                   onMouseLeave={scheduleClose}
                   onBlur={(event) => {
@@ -524,6 +618,7 @@ export function Header({ posts }: { posts: PostMeta[] }) {
                     aria-current={active ? "page" : undefined}
                     className="nav-entry-link"
                     href={item.href}
+                    prefetch={false}
                   >{item.label}</Link>
                   {hasChildren ? (
                     <button
@@ -545,6 +640,7 @@ export function Header({ posts }: { posts: PostMeta[] }) {
                   ) : null}
                   {hasChildren ? (
                     <div
+                      aria-hidden={!expanded}
                       className={expanded ? "nav-dropdown open" : "nav-dropdown"}
                       id={`dropdown-${item.href.split("/").filter(Boolean).join("-")}`}
                       onMouseEnter={cancelClose}
@@ -557,6 +653,7 @@ export function Header({ posts }: { posts: PostMeta[] }) {
                           className={isActivePath(pathname, child.href) ? "active" : ""}
                           href={child.href}
                           key={child.href}
+                          prefetch={false}
                         >{child.label}<ArrowUpRight size={14} /></Link>
                       ))}
                     </div>
@@ -578,15 +675,14 @@ export function Header({ posts }: { posts: PostMeta[] }) {
       </header>
 
       <SearchDialog open={panel === "search"} posts={posts} onClose={closePanel} />
-      <ProfileDialog open={panel === "profile"} posts={posts} onClose={closePanel} />
       <MobileDrawer
         open={panel === "mobile"}
         pathname={pathname}
         onClose={closePanel}
         onSearch={() => openPanel("search")}
-        onProfile={() => openPanel("profile")}
+        onProfile={openProfile}
       />
-      <FloatingTools onProfile={() => openPanel("profile")} />
+      <FloatingTools onProfile={openProfile} />
     </>
   );
 }

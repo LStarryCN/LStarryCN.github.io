@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import localFont from "next/font/local";
 import {
   ArrowLeft,
   ArrowRight,
@@ -9,11 +10,20 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import "katex/dist/katex.min.css";
+import "highlight.js/styles/github-dark-dimmed.css";
 import { CodeCopy } from "@/components/CodeCopy";
 import { PostToc } from "@/components/PostToc";
 import { formatDate, postHref } from "@/lib/format";
 import { getAllPosts, getPostBySlug } from "@/lib/posts";
 import { siteConfig } from "@/siteConfig";
+
+const mono = localFont({
+  src: "../../../node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2",
+  variable: "--font-mono",
+  display: "swap",
+  weight: "100 800",
+});
 
 export const dynamicParams = false;
 
@@ -52,7 +62,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
   const older = index >= 0 && index < posts.length - 1 ? posts[index + 1] : undefined;
 
   return (
-    <div className="page-shell article-page">
+    <div className={`page-shell article-page ${mono.variable}`}>
       <article className="article-main glass-card">
         <header className="article-header">
           <div className="article-category"><Folder size={15} /> {post.category}{post.subcategory ? ` / ${post.subcategory}` : ""}</div>

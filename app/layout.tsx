@@ -1,10 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import type { ReactNode } from "react";
-import "@fontsource-variable/noto-sans-sc";
 import "@hanzi.pro/webfonts-lxgw-wenkai/swap/500.css";
-import "katex/dist/katex.min.css";
-import "highlight.js/styles/github-dark-dimmed.css";
 import "./globals.css";
 import { BackgroundLayer } from "@/components/BackgroundLayer";
 import { Footer } from "@/components/Footer";
@@ -19,13 +16,6 @@ const brand = localFont({
   weight: "100 900",
 });
 
-const mono = localFont({
-  src: "../node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2",
-  variable: "--font-mono",
-  display: "swap",
-  weight: "100 800",
-});
-
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
@@ -33,6 +23,10 @@ export const metadata: Metadata = {
     template: `%s · ${siteConfig.name}`,
   },
   description: siteConfig.description,
+  icons: {
+    icon: "/images/avatar/lstarry-logo.jpeg",
+    apple: "/images/avatar/lstarry-logo.jpeg",
+  },
   keywords: ["软件工程", "编程", "算法", "C++", "Java", "Python", "AI", "学习笔记"],
   authors: [{ name: siteConfig.name, url: siteConfig.url }],
   creator: siteConfig.name,
@@ -67,7 +61,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
 
   return (
     <html
-      className={`${brand.variable} ${mono.variable}`}
+      className={brand.variable}
       data-scroll-behavior="smooth"
       lang="zh-CN"
       suppressHydrationWarning

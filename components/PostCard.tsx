@@ -13,7 +13,7 @@ export function PostCard({ post, featured = false }: { post: PostMeta; featured?
   return (
     <article className={cardClassName}>
       {post.cover ? (
-        <Link className="post-cover" href={postHref(post.slug)} aria-label={`阅读：${post.title}`}>
+        <Link className="post-cover" href={postHref(post.slug)} aria-label={`阅读：${post.title}`} prefetch={false}>
           <img src={post.cover} alt="" />
           <span className="post-category">{post.subcategory || post.category}</span>
         </Link>
@@ -24,13 +24,13 @@ export function PostCard({ post, featured = false }: { post: PostMeta; featured?
           <span><CalendarDays size={14} /> {formatDate(post.date)}</span>
           <span><Clock3 size={14} /> {post.readingTime} 分钟</span>
         </div>
-        <h2><Link href={postHref(post.slug)}>{post.title}</Link></h2>
+        <h2><Link href={postHref(post.slug)} prefetch={false}>{post.title}</Link></h2>
         <p>{post.description}</p>
         <div className="post-card-footer">
           <div className="tag-row">
             {post.tags.slice(0, 3).map((tag) => <span key={tag}>#{tag}</span>)}
           </div>
-          <Link className="read-link" href={postHref(post.slug)} aria-label={`继续阅读 ${post.title}`}>
+          <Link className="read-link" href={postHref(post.slug)} aria-label={`继续阅读 ${post.title}`} prefetch={false}>
             阅读 <ArrowUpRight size={15} />
           </Link>
         </div>

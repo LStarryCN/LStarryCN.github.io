@@ -9,7 +9,7 @@ type ClockValue = {
 
 const emptyClock: ClockValue = {
   date: "正在读取日期",
-  time: "--:--:--",
+  time: "--:--",
 };
 
 function getShanghaiTime(): ClockValue {
@@ -18,7 +18,6 @@ function getShanghaiTime(): ClockValue {
     time: new Intl.DateTimeFormat("zh-CN", {
       hour: "2-digit",
       minute: "2-digit",
-      second: "2-digit",
       hour12: false,
       timeZone: "Asia/Shanghai",
     }).format(now),
@@ -38,7 +37,7 @@ export function CurrentTime({ detailed = false }: { detailed?: boolean }) {
   useEffect(() => {
     const update = () => setClock(getShanghaiTime());
     update();
-    const timer = window.setInterval(update, 1_000);
+    const timer = window.setInterval(update, 60_000);
     return () => window.clearInterval(timer);
   }, []);
 
