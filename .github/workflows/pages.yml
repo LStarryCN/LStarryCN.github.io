@@ -1,4 +1,4 @@
-name: Deploy Hexo to Pages
+name: Deploy Next.js to Pages
 
 on:
   push:
@@ -32,8 +32,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Hexo
-        run: npx hexo generate
+      - name: Build static site
+        run: npm run build
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -41,7 +41,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./public
+          path: ./out
 
   deploy:
     environment:

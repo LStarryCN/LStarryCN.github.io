@@ -1,5 +1,8 @@
 node_modules/
-public/
+.next/
+out/
 .deploy*/
 db.json
 *.log
+*.tsbuildinfo
+.DS_Store
