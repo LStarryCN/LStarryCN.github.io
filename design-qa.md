@@ -1,57 +1,70 @@
-# LStarry visual QA
+# LStarry immersive redesign — visual QA
 
 ## Evidence
 
-- Source visual truth path: `E:\Blog\LStarryBlog\public\images\backgrounds\lstarry-bg.jpg`
-- Source pixels: 3840×2160, 16:9, inspected at original resolution.
-- Rendered implementation: `http://localhost:3000/` served from the static `out/` export.
-- Implementation screenshot path: Codex in-app Browser captures attached to this task (the browser tool does not expose a repository file path).
-- Primary comparison: 1440×900 CSS px at device pixel ratio 1; implementation capture is 1440×900 pixels. The full source was normalized to 1440×810 inside the same 1440×900 browser viewport, then compared in one combined visual pass.
-- Additional responsive captures: 1920×1080, 768×1024, 430×932, and 375×812 CSS px; light theme unless a dark state is named below.
-- States: home light/dark, posts archive, empty C++ topic, article light/dark, mobile navigation open, mobile article TOC open.
+- Visual references supplied by the owner:
+  - `/var/folders/k2/15cgz8354pn6jjpghg6j568w0000gn/T/codex-clipboard-90b5505e-1f91-4f2c-b5c3-2fac25419ed1.png`
+  - `/var/folders/k2/15cgz8354pn6jjpghg6j568w0000gn/T/codex-clipboard-9b99dac4-4dab-4687-8e0f-eece57ae5c08.png`
+  - `/var/folders/k2/15cgz8354pn6jjpghg6j568w0000gn/T/codex-clipboard-665ca552-31d2-4486-92e7-f686e7f6a65d.png`
+  - `/var/folders/k2/15cgz8354pn6jjpghg6j568w0000gn/T/codex-clipboard-bd8211a5-9468-4615-9a5d-e38893db5595.png`
+- Owner background: `public/images/backgrounds/lstarry-bg.jpg`.
+- New owner logo source: `/Users/lstarry/Downloads/oYBPsiMviwqIWCYIlAgi6goAA0aBANwtrEAaA~tplv-dy-aw.jpeg`.
+- Implementation preview: live Next development preview at `http://127.0.0.1:3000/` during visual review; final static export at `http://127.0.0.1:4173/`.
+- Browser evidence was collected at approximately 1280 px and 1604 px desktop widths and at 375×812 mobile before the Chrome integration tab became unavailable.
+- A same-pass comparison included the supplied JingYue profile-panel reference and the implementation profile dialog at matching desktop scale.
 
-## Full-view comparison evidence
+## Source-to-implementation comparison
 
-- The desktop implementation keeps the source composition readable: the character remains on the left, the pink-purple light remains near the visual center, and the giant remains dominant on the right.
-- Content is layered over the image with translucent cool-white glass instead of a global dark-purple cover. The lower haze supports footer/content legibility without hiding the artwork.
-- The home hierarchy is intentionally adapted rather than cloned: compact search, 7/5 profile and status cards, one information strip, then asymmetric latest/project/learning/theme cards.
-- On tablet the crop moves to 30% and on phones to 25%, prioritizing the character and light source while retaining part of the giant silhouette. This is an expected crop for the narrow aspect ratio, not a stretched image.
-
-## Focused comparison evidence
-
-- The navigation, search, profile statistics, status rows, latest-post heading, and project/learning/theme controls were inspected in the native-size captures. Separate zoom crops were not needed because their typography, icons, borders, and tap targets remained legible at the requested CSS sizes.
-- The article surface was checked independently in both themes; its higher-opacity reading surface preserves body, table, formula, code, and TOC contrast while the background remains visible at the sides.
+- The three-part floating navigation, spacious hero, profile overlay, right tool rail, and restrained monochrome controls closely follow the reference hierarchy.
+- The reference site's artwork, avatar, copy, statistics, music player, and personal data were intentionally not copied.
+- LStarry's supplied blue/purple background remains dominant in the hero, while the lower content transitions to a readable editorial surface.
+- The reference's profile calendar idea is implemented with real post dates, not decorative activity values.
+- The new pink owner logo is used consistently in the brand pill, profile dialog, About page, browser metadata icon, and static export.
 
 ## Required fidelity surfaces
 
-- Typography: natural Chinese labels replace repeated uppercase template kickers; display weights are limited to identity and article headings, and auxiliary text retains readable sizing and line height.
-- Spacing and layout: no oversized home hero remains. The first fold reaches personal content immediately and reveals the latest-content section at 430, 768, 1440, and 1920 widths. Card radii and 16px grid gaps are consistent.
-- Colors and tokens: light mode uses fog blue, cool white, blue-grey, restrained lavender/pink accents, and 71% glass surfaces. Dark mode uses translucent blue-grey instead of black and keeps the illustration visible.
-- Image quality: the supplied 3840×2160 JPEG is used directly with `cover`, no stretching, no additional particles/stars, and no copied or generated replacement artwork.
-- Copy and content: profile facts, counts, the one real post, and the empty project/topic states remain truthful. No resume history, project, or progress data was invented.
+- Typography: Fraunces for identity/English display text, LXGW WenKai for Chinese headings, Noto Sans SC for body/navigation, and JetBrains Mono for code. All are local and licensed.
+- Navigation: three separate capsules, visible current-route state, parent-route highlighting, discrete hover state, dropdown bridge, and responsive mobile replacement.
+- Hero: near-full-screen image-led entry with truthful introduction, Shanghai local time, article entry, and scroll cue.
+- Content transition: the first lower section exposes the single real article and honest destination counts instead of presenting a dashboard.
+- Overlays: profile, search, and mobile drawer have clear backdrops, reliable focus placement, Escape handling, and focus return.
+- Cards and empty states: missing covers and projects use text-first or empty-state treatments, never fabricated images.
+- Image quality: the original background and logo are served without remote dependencies. The logo copies are byte-identical to the uploaded JPEG.
 
-## Comparison history
+## Interaction checks
 
-1. First pass findings:
-   - P2: latest/archive result headings lost contrast where they sat directly on the artwork.
-   - P2: the first light-glass token was slightly too transparent over the brightest source region.
-   - P1: the completed route animation retained a transform, creating a containing block that prevented the mobile article TOC control from staying fixed to the viewport.
-2. Fixes:
-   - Added a high-contrast cool-white treatment and restrained shadow to headings placed directly on the artwork.
-   - Increased the standard light surface from 66% to 71% opacity while keeping the background readable.
-   - Removed transform from the route transition and kept a short opacity-only fade; simplified the TOC button to the shared blue accent.
+- Cmd/Ctrl+K opens search and autofocuses the input.
+- Local search filters against real article title, description, category, and tags; Escape closes the dialog.
+- Desktop dropdowns open with click/pointer interaction, accept ArrowDown keyboard entry, close with Escape/outside interaction, and return focus to the trigger.
+- Active navigation state was observed moving between home and posts after the measured-indicator fix.
+- Profile dialog opens from both identity/tool entry points and uses real data.
+- Mobile drawer contains every requested primary and child route; Escape closes it and returns focus to the menu trigger.
+- Theme and back-to-top controls remain available in the reduced tool rail.
+
+## Comparison history and fixes
+
+1. Initial implementation findings:
+   - P1: dropdown Escape could immediately reopen because focus return triggered an `onFocus` open path.
+   - P2: mobile brand CSS hid the avatar by targeting every nested `span`.
+   - P2: profile and drawer surfaces were too transparent over the strongest background areas.
+   - P2: the first active indicator animation used a less reliable transform-based measurement.
+   - P2: coverless content still resembled a visual placeholder.
+2. Fixes applied:
+   - Removed focus-to-open behavior while preserving keyboard entry through the explicit toggle.
+   - Narrowed the mobile brand selector so the owner logo remains visible.
+   - Increased overlay opacity and refined desktop/mobile dialog placement.
+   - Changed the active indicator to measured `left` and `width` transitions.
+   - Replaced missing-cover graphics with a compact text-only composition.
 3. Post-fix evidence:
-   - Re-captured the home at 1440×900, 768×1024, 430×932, and 375×812.
-   - Re-captured the mobile archive and article at 375×812; the TOC control is visibly fixed at the viewport edge and its drawer opens correctly.
-   - Confirmed no page-level horizontal overflow at all five requested viewport widths and no browser console warnings/errors.
+   - Rechecked profile, search, desktop dropdown, active state, mobile hero, mobile drawer, and mobile profile states.
+   - Confirmed search autofocus, no-match filtering, Escape closure, dropdown focus return, and mobile drawer focus return.
+   - Confirmed the production build, direct static routes, internal asset links, local font delivery, and new icon output after the browser integration became unavailable.
 
-## Findings
+## Findings and accepted constraints
 
-- No actionable P0, P1, or P2 visual findings remain.
-- Accepted constraint: a 16:9 scene cannot show the full left character and full right giant simultaneously in a portrait viewport. The phone crop deliberately protects the character's upper body and central light source instead of stretching the asset.
-
-## Follow-up polish
-
-- P3: when real article and project cover art is supplied, replace the restrained shared gradient placeholder without changing the current card proportions.
+- No actionable P0 or P1 implementation issue remains.
+- No actionable P2 issue was visible in the completed browser checks.
+- P3/tooling limitation: final screenshots at 430, 768, 1440, and 1920 px were not captured after the logo change because Chrome returned `Bad Request` and then lost the active tab. Per owner instruction, browser calls were stopped; these widths should receive a short manual confirmation when the integration is healthy.
+- The complete local CJK font set adds roughly 10 MiB to the export, but the fonts are split into small `unicode-range` resources so a browser does not download the complete set for a normal page.
 
 final result: passed
