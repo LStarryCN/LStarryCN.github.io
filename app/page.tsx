@@ -1,97 +1,131 @@
 import {
+  ArrowDown,
   ArrowUpRight,
   BookOpenText,
   Code2,
   FolderGit2,
-  GitBranch,
-  Layers3,
-  Sparkles,
+  GraduationCap,
+  PenLine,
 } from "lucide-react";
 import Link from "next/link";
-import { PostCard } from "@/components/PostCard";
-import { SearchBox } from "@/components/SearchBox";
-import { SiteDashboard } from "@/components/SiteDashboard";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { CurrentTime } from "@/components/CurrentTime";
 import { projects } from "@/data/projects";
-import { getAllPosts, getPostStats } from "@/lib/posts";
+import { formatDate, postHref } from "@/lib/format";
+import { getAllPosts } from "@/lib/posts";
 import { siteConfig } from "@/siteConfig";
 
 export default function HomePage() {
   const posts = getAllPosts();
-  const stats = getPostStats();
   const latest = posts[0];
 
   return (
-    <div className="page-shell home-page">
-      <section className="home-intro">
-        <p>在星屿里，整理代码与日常。</p>
-        <SearchBox posts={posts} />
+    <div className="home-page">
+      <section className="immersive-hero" aria-labelledby="home-title">
+        <div className="hero-copy">
+          <p className="hero-subtitle">{siteConfig.subtitle}</p>
+          <h1 id="home-title">{siteConfig.name}</h1>
+          <p className="hero-introduction">
+            我是 LStarry，软件工程本科生。<br />
+            这里主要记录算法、开发和一些日常想法。
+          </p>
+          <Link className="hero-article-link" href="/posts/">
+            进入文章 <ArrowUpRight size={17} />
+          </Link>
+        </div>
+
+        <aside className="hero-clock" aria-label="上海当前时间">
+          <span>Asia / Shanghai</span>
+          <CurrentTime detailed />
+        </aside>
+
+        <a className="scroll-cue" href="#home-content">
+          <span>向下浏览</span>
+          <ArrowDown size={20} />
+        </a>
       </section>
 
-      <section className="bento-grid" aria-label="LStarry 概览">
-        <article className="glass-card profile-card bento-span-7">
-          <div className="profile-identity">
-            <div className="profile-mark"><Sparkles size={34} /></div>
-            <div><h2>{siteConfig.name}</h2><p>{siteConfig.role}</p></div>
-          </div>
-          <p className="profile-description">{siteConfig.description}</p>
-          <div className="profile-stats">
-            <div><strong>{stats.posts}</strong><span>文章</span></div>
-            <div><strong>{stats.categories}</strong><span>分类</span></div>
-            <div><strong>{stats.tags}</strong><span>标签</span></div>
-            <div><strong>{projects.length}</strong><span>项目</span></div>
-          </div>
-          <a className="primary-link" href={siteConfig.github} target="_blank" rel="noreferrer">
-            <GitBranch size={18} /> GitHub <ArrowUpRight size={16} />
-          </a>
-        </article>
+      <section className="home-content" id="home-content" aria-label="博客内容">
+        <div className="home-content-inner">
+          <header className="home-section-heading">
+            <div>
+              <span>最近的记录</span>
+              <h2>从一篇真实文章开始</h2>
+            </div>
+            <Link href="/posts/">查看文章归档 <ArrowUpRight size={16} /></Link>
+          </header>
 
-        <article className="glass-card status-card bento-span-5">
-          <div className="status-heading"><div><span className="live-dot" /> 最近在做什么</div></div>
-          <h2>保持好奇，持续构建。</h2>
-          <div className="status-list">
-            {siteConfig.currentStatus.learning.map((item, index) => (
-              <div key={item}>
-                {index === 0 ? <BookOpenText size={18} /> : index === 1 ? <Code2 size={18} /> : <Sparkles size={18} />}
-                <span>{item}</span>
+          <div className="home-editorial-grid">
+            {latest ? (
+              <article className="home-latest-post">
+                {latest.cover ? (
+                  <Link className="home-latest-cover" href={postHref(latest.slug)}>
+                    <img src={latest.cover} alt="" />
+                  </Link>
+                ) : null}
+                <div className="home-latest-copy">
+                  <div className="home-latest-meta">
+                    <span>{latest.subcategory || latest.category}</span>
+                    <time dateTime={latest.date}>{formatDate(latest.date)}</time>
+                    <span>约 {latest.readingTime} 分钟</span>
+                  </div>
+                  <h3><Link href={postHref(latest.slug)}>{latest.title}</Link></h3>
+                  <p>{latest.description}</p>
+                  <div className="home-latest-footer">
+                    <div className="tag-row">
+                      {latest.tags.slice(0, 3).map((tag) => <span key={tag}>#{tag}</span>)}
+                    </div>
+                    <Link href={postHref(latest.slug)}>阅读全文 <ArrowUpRight size={16} /></Link>
+                  </div>
+                </div>
+              </article>
+            ) : (
+              <div className="home-quiet-empty">
+                <BookOpenText size={22} />
+                <div><strong>文章还在整理</strong><span>准备好后会从这里开始。</span></div>
               </div>
-            ))}
+            )}
+
+            <nav className="home-topic-list" aria-label="内容分类">
+              <Link href="/topics/algorithm/">
+                <span><Code2 size={19} /> 算法</span>
+                <small>字符串、数据结构、图论与动态规划</small>
+                <ArrowUpRight size={17} />
+              </Link>
+              <Link href="/topics/dev/">
+                <span><FolderGit2 size={19} /> 开发</span>
+                <small>C++、Java、Python 与 AI</small>
+                <ArrowUpRight size={17} />
+              </Link>
+              <Link href="/topics/learning/">
+                <span><GraduationCap size={19} /> 学习</span>
+                <small>学习笔记与阶段记录</small>
+                <ArrowUpRight size={17} />
+              </Link>
+              <Link href="/topics/essay/">
+                <span><PenLine size={19} /> 随笔</span>
+                <small>技术之外的观察与想法</small>
+                <ArrowUpRight size={17} />
+              </Link>
+            </nav>
           </div>
-        </article>
 
-        <div className="glass-card motto-card bento-span-12">
-          <Sparkles size={18} />
-          <strong>{siteConfig.subtitle}</strong>
-          <span>把零散的思考，整理成可以再次抵达的路径。</span>
-        </div>
-
-        <section className="bento-span-7 latest-card-wrap">
-          <div className="bento-section-title"><span><BookOpenText size={17} /> 最新文章</span><Link href="/posts/">全部文章 <ArrowUpRight size={15} /></Link></div>
-          {latest ? <PostCard post={latest} featured /> : null}
-        </section>
-
-        <div className="bento-span-5 compact-bento">
-          <article className="glass-card project-teaser">
-            <div className="card-icon"><FolderGit2 size={22} /></div>
-            <span>Projects</span>
-            <h2>项目</h2>
-            <p>{projects.length ? `${projects.length} 个项目正在展示` : "项目记录将在这里出现。"}</p>
-            <Link href="/projects/">查看项目 <ArrowUpRight size={16} /></Link>
-          </article>
-          <div className="compact-row">
-            <article className="glass-card learning-teaser">
-              <Layers3 size={21} />
-              <div><span>最近学习</span><h2>学习笔记</h2></div>
-              <Link href="/topics/learning/" aria-label="查看学习分类"><ArrowUpRight size={18} /></Link>
-            </article>
-            <article className="glass-card theme-card">
-              <ThemeToggle expanded />
-            </article>
+          <div className="home-destination-row">
+            <Link href="/projects/">
+              <span>项目</span>
+              <strong>{projects.length ? `${projects.length} 个公开项目` : "暂无公开项目"}</strong>
+              <small>只展示真实实践记录</small>
+            </Link>
+            <Link href="/posts/">
+              <span>归档</span>
+              <strong>{posts.length} 篇文章</strong>
+              <small>搜索、筛选与切换视图</small>
+            </Link>
+            <Link href="/about/">
+              <span>关于</span>
+              <strong>认识 LStarry</strong>
+              <small>这个博客为何存在</small>
+            </Link>
           </div>
-        </div>
-
-        <div className="bento-span-12">
-          <SiteDashboard posts={stats.posts} categories={stats.categories} />
         </div>
       </section>
     </div>

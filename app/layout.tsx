@@ -1,12 +1,30 @@
 import type { Metadata, Viewport } from "next";
+import localFont from "next/font/local";
 import type { ReactNode } from "react";
+import "@fontsource-variable/noto-sans-sc";
+import "@hanzi.pro/webfonts-lxgw-wenkai/swap/500.css";
 import "katex/dist/katex.min.css";
 import "highlight.js/styles/github-dark-dimmed.css";
 import "./globals.css";
 import { BackgroundLayer } from "@/components/BackgroundLayer";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { getAllPosts } from "@/lib/posts";
 import { siteConfig } from "@/siteConfig";
+
+const brand = localFont({
+  src: "../node_modules/@fontsource-variable/fraunces/files/fraunces-latin-full-normal.woff2",
+  variable: "--font-brand",
+  display: "swap",
+  weight: "100 900",
+});
+
+const mono = localFont({
+  src: "../node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2",
+  variable: "--font-mono",
+  display: "swap",
+  weight: "100 800",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -45,8 +63,15 @@ export const viewport: Viewport = {
 const themeScript = `(() => { try { const saved = localStorage.getItem('lstarry-theme'); const theme = saved === 'light' || saved === 'dark' ? saved : 'light'; document.documentElement.dataset.theme = theme; document.documentElement.style.colorScheme = theme; } catch (_) {} })();`;
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
+  const posts = getAllPosts();
+
   return (
-    <html lang="zh-CN" suppressHydrationWarning>
+    <html
+      className={`${brand.variable} ${mono.variable}`}
+      data-scroll-behavior="smooth"
+      lang="zh-CN"
+      suppressHydrationWarning
+    >
       <head>
         <link rel="preload" href={siteConfig.backgrounds[0]} as="image" />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
@@ -55,7 +80,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
         <a className="skip-link" href="#main-content">跳到主要内容</a>
         <BackgroundLayer />
         <div className="site-frame">
-          <Header />
+          <Header posts={posts} />
           <main id="main-content">{children}</main>
           <Footer />
         </div>

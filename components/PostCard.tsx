@@ -1,18 +1,25 @@
-import { ArrowUpRight, CalendarDays, Clock3, FileText } from "lucide-react";
+import { ArrowUpRight, CalendarDays, Clock3 } from "lucide-react";
 import Link from "next/link";
 import { formatDate, postHref } from "@/lib/format";
 import type { PostMeta } from "@/types/content";
 
 export function PostCard({ post, featured = false }: { post: PostMeta; featured?: boolean }) {
+  const cardClassName = [
+    "post-card",
+    featured ? "featured-post-card" : "",
+    post.cover ? "" : "post-card-no-cover",
+  ].filter(Boolean).join(" ");
+
   return (
-    <article className={featured ? "post-card featured-post-card" : "post-card"}>
-      <Link className="post-cover" href={postHref(post.slug)} aria-label={`阅读：${post.title}`}>
-        {post.cover ? <img src={post.cover} alt="" /> : (
-          <span className="cover-placeholder"><FileText size={featured ? 38 : 30} /></span>
-        )}
-        <span className="post-category">{post.subcategory || post.category}</span>
-      </Link>
+    <article className={cardClassName}>
+      {post.cover ? (
+        <Link className="post-cover" href={postHref(post.slug)} aria-label={`阅读：${post.title}`}>
+          <img src={post.cover} alt="" />
+          <span className="post-category">{post.subcategory || post.category}</span>
+        </Link>
+      ) : null}
       <div className="post-card-body">
+        {!post.cover ? <span className="post-category post-category-inline">{post.subcategory || post.category}</span> : null}
         <div className="post-meta">
           <span><CalendarDays size={14} /> {formatDate(post.date)}</span>
           <span><Clock3 size={14} /> {post.readingTime} 分钟</span>
