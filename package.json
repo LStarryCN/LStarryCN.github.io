@@ -34,7 +34,7 @@
     "@fontsource-variable/noto-sans-sc": "^5.3.0",
     "@hanzi.pro/webfonts-lxgw-wenkai": "^0.1.0",
     "@tailwindcss/postcss": "4.3.3",
-    "@types/node": "^20.19.17",
+    "@types/node": "^26.5.0",
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.9",
     "postcss": "^8.5.6",
