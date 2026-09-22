@@ -67,7 +67,6 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
       suppressHydrationWarning
     >
       <head>
-        <link rel="preload" href={siteConfig.backgrounds[0]} as="image" />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>

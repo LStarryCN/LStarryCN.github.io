@@ -54,7 +54,7 @@ export default function HomePage() {
               <article className="home-latest-post">
                 {latest.cover ? (
                   <Link className="home-latest-cover" href={postHref(latest.slug)} prefetch={false}>
-                    <img src={latest.cover} alt="" />
+                    <img src={latest.cover} alt="" loading="lazy" decoding="async" />
                   </Link>
                 ) : null}
                 <div className="home-latest-copy">

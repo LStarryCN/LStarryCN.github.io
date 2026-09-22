@@ -14,8 +14,12 @@ import "katex/dist/katex.min.css";
 import "highlight.js/styles/github-dark-dimmed.css";
 import { CodeCopy } from "@/components/CodeCopy";
 import { PostToc } from "@/components/PostToc";
+import { RelatedPosts } from "@/components/RelatedPosts";
+import { SeriesNavigation } from "@/components/SeriesNavigation";
 import { formatDate, postHref } from "@/lib/format";
 import { getAllPosts, getPostBySlug } from "@/lib/posts";
+import { getRelatedPosts } from "@/lib/related";
+import { getAllSeries, seriesSlug } from "@/lib/series";
 import { siteConfig } from "@/siteConfig";
 
 const mono = localFont({
@@ -60,12 +64,18 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
   const index = posts.findIndex((item) => item.slug === post.slug);
   const newer = index > 0 ? posts[index - 1] : undefined;
   const older = index >= 0 && index < posts.length - 1 ? posts[index + 1] : undefined;
+  const series = post.series ? getAllSeries(posts).find((item) => item.slug === seriesSlug(post)) : undefined;
+  const seriesPosition = series?.posts.findIndex((item) => item.slug === post.slug) ?? -1;
+  const related = getRelatedPosts(post, posts);
 
   return (
     <div className={`page-shell article-page ${mono.variable}`}>
       <article className="article-main glass-card">
         <header className="article-header">
           <div className="article-category"><Folder size={15} /> {post.category}{post.subcategory ? ` / ${post.subcategory}` : ""}</div>
+          {series ? <Link className="article-series-label" href={`/series/#${series.slug}`}>
+            <span>SERIES</span> {series.title} <small>{String(seriesPosition + 1).padStart(2, "0")} / {String(series.posts.length).padStart(2, "0")}</small>
+          </Link> : null}
           <h1>{post.title}</h1>
           <p>{post.description}</p>
           <div className="article-meta">
@@ -77,6 +87,8 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
         <div className="article-divider" />
         <div className="article-content" dangerouslySetInnerHTML={{ __html: post.contentHtml }} />
         <CodeCopy />
+        {series ? <SeriesNavigation series={series} current={post} /> : null}
+        <RelatedPosts posts={related} />
         <nav className="post-pagination" aria-label="上一篇与下一篇">
           {older ? <Link href={postHref(older.slug)}><ArrowLeft size={18} /><span><small>上一篇</small><strong>{older.title}</strong></span></Link> : <span />}
           {newer ? <Link className="next-post" href={postHref(newer.slug)}><span><small>下一篇</small><strong>{newer.title}</strong></span><ArrowRight size={18} /></Link> : <span />}

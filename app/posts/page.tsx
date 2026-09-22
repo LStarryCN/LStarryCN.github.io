@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { FileText } from "lucide-react";
+import Link from "next/link";
 import { PostsExplorer } from "@/components/PostsExplorer";
 import { getAllPosts } from "@/lib/posts";
 
@@ -15,7 +16,7 @@ export default function PostsPage() {
     <div className="page-shell inner-page">
       <header className="page-hero glass-card">
         <span className="page-icon"><FileText size={25} /></span>
-        <div><span className="section-kicker">文章归档</span><h1>全部文章</h1><p>按标题、内容方向或标签，找到值得再次打开的记录。</p></div>
+        <div><span className="section-kicker">文章归档</span><h1>全部文章</h1><p>按标题、内容方向或标签，找到值得再次打开的记录。</p><Link className="archive-series-link" href="/series/">浏览系列文章 →</Link></div>
         <strong className="hero-count">{posts.length}<small>篇文章</small></strong>
       </header>
       <PostsExplorer posts={posts} />

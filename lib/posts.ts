@@ -11,6 +11,7 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import type { Post, PostMeta, TocItem } from "@/types/content";
+import { getImageAsset } from "@/lib/images";
 
 const postsDirectory = path.join(process.cwd(), "content", "posts");
 
@@ -45,6 +46,10 @@ function readPostMeta(fileName: string): PostMeta {
     featured: Boolean(data.featured),
     draft: Boolean(data.draft),
     readingTime: readingTime(content),
+    series: typeof data.series === "string" && data.series.trim() ? data.series.trim() : undefined,
+    seriesOrder: Number.isInteger(data.seriesOrder) && data.seriesOrder > 0 ? data.seriesOrder : undefined,
+    seriesSlug: typeof data.seriesSlug === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(data.seriesSlug)
+      ? data.seriesSlug : undefined,
   };
 }
 
@@ -81,7 +86,37 @@ function extractToc(html: string): TocItem[] {
   );
 }
 
-async function renderMarkdown(content: string) {
+function responsiveImages(slug: string) {
+  return () => (tree: { type: string; tagName?: string; properties?: Record<string, unknown>; children?: unknown[] }) => {
+    const walk = (node: typeof tree) => {
+      if (!node.children) return;
+      node.children = node.children.map((child) => {
+        const image = child as typeof tree;
+        if (image.tagName !== "img") { walk(image); return image; }
+        const src = String(image.properties?.src || "");
+        const asset = getImageAsset(slug, src);
+        image.properties = { ...image.properties, loading: "lazy", decoding: "async" };
+        if (!asset) return image;
+        image.properties = { ...image.properties, src: asset.src, width: asset.width, height: asset.height,
+          style: `aspect-ratio:${asset.width}/${asset.height}` };
+        return { type: "element", tagName: "picture", properties: {
+          className: ["article-picture"],
+          style: `background-image:url('${asset.blur}');aspect-ratio:${asset.width}/${asset.height}`,
+        }, children: [
+          ...(["avif", "webp"] as const).map((format) => ({ type: "element", tagName: "source", properties: {
+            type: `image/${format}`,
+            srcSet: asset.widths.map((width) => `${asset.base}/${width}.${format} ${width}w`).join(", "),
+            sizes: "(max-width: 800px) calc(100vw - 50px), 760px",
+          }, children: [] })),
+          image,
+        ] };
+      });
+    };
+    walk(tree);
+  };
+}
+
+async function renderMarkdown(content: string, slug: string) {
   return String(
     await unified()
       .use(remarkParse)
@@ -91,6 +126,7 @@ async function renderMarkdown(content: string) {
       .use(rehypeSlug)
       .use(rehypeHighlight, { detect: false, ignoreMissing: true })
       .use(rehypeKatex)
+      .use(responsiveImages(slug))
       .use(rehypeStringify)
       .process(content),
   );
@@ -104,7 +140,7 @@ export async function getPostBySlug(slug: string): Promise<Post | undefined> {
   const { content } = matter(raw);
   const metadata = readPostMeta(fileName);
   if (metadata.draft) return undefined;
-  const contentHtml = await renderMarkdown(content);
+  const contentHtml = await renderMarkdown(content, slug);
   return { ...metadata, content, contentHtml, toc: extractToc(contentHtml) };
 }
 

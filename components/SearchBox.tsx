@@ -2,22 +2,14 @@
 
 import { ArrowRight, Search } from "lucide-react";
 import Link from "next/link";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useState } from "react";
 import { postHref } from "@/lib/format";
-import type { PostMeta } from "@/types/content";
+import { useFullTextSearch } from "@/lib/search";
 
-export function SearchBox({ posts }: { posts: PostMeta[] }) {
+export function SearchBox() {
   const [query, setQuery] = useState("");
   const normalized = query.trim().toLocaleLowerCase("zh-CN");
-  const matches = useMemo(() => {
-    if (!normalized) return [];
-    return posts.filter((post) =>
-      [post.title, post.description, post.category, post.subcategory || "", ...post.tags]
-        .join(" ")
-        .toLocaleLowerCase("zh-CN")
-        .includes(normalized),
-    ).slice(0, 5);
-  }, [normalized, posts]);
+  const { results: matches, loading } = useFullTextSearch(query, 5);
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -43,12 +35,12 @@ export function SearchBox({ posts }: { posts: PostMeta[] }) {
       </form>
       {normalized ? (
         <div className="search-suggestions">
-          {matches.length ? matches.map((post) => (
-            <Link href={postHref(post.slug)} key={post.slug} prefetch={false}>
-              <span>{post.title}</span>
-              <small>{post.category} · {post.readingTime} 分钟</small>
+          {matches.length ? matches.map(({ entry }) => (
+            <Link href={postHref(entry.slug)} key={entry.slug} prefetch={false}>
+              <span>{entry.title}</span>
+              <small>{entry.category}</small>
             </Link>
-          )) : <p>没有匹配的文章，可以前往文章页查看全部内容。</p>}
+          )) : <p>{loading ? "正在搜索…" : "没有匹配的文章，可以前往文章页查看全部内容。"}</p>}
         </div>
       ) : null}
     </div>

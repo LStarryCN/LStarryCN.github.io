@@ -4,6 +4,7 @@ import { Grid2X2, List, Search, SlidersHorizontal, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { PostCard } from "@/components/PostCard";
 import { EmptyState } from "@/components/EmptyState";
+import { useFullTextSearch } from "@/lib/search";
 import type { PostMeta } from "@/types/content";
 
 type View = "grid" | "list";
@@ -13,6 +14,7 @@ export function PostsExplorer({ posts }: { posts: PostMeta[] }) {
   const [category, setCategory] = useState("全部");
   const [tag, setTag] = useState("全部");
   const [view, setView] = useState<View>("grid");
+  const { results, loading, error } = useFullTextSearch(query);
 
   useEffect(() => {
     const incoming = new URLSearchParams(window.location.search).get("q");
@@ -29,17 +31,14 @@ export function PostsExplorer({ posts }: { posts: PostMeta[] }) {
   );
   const filtered = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase("zh-CN");
+    const rank = new Map(results.map(({ entry }, index) => [entry.slug, index]));
     return posts.filter((post) => {
-      const matchesQuery = !normalized ||
-        [post.title, post.description, post.category, post.subcategory || "", ...post.tags]
-          .join(" ")
-          .toLocaleLowerCase("zh-CN")
-          .includes(normalized);
+      const matchesQuery = !normalized || rank.has(post.slug);
       return matchesQuery &&
         (category === "全部" || post.category === category) &&
         (tag === "全部" || post.tags.includes(tag));
-    });
-  }, [category, posts, query, tag]);
+    }).sort((a, b) => normalized ? (rank.get(a.slug) ?? Infinity) - (rank.get(b.slug) ?? Infinity) : 0);
+  }, [category, posts, query, results, tag]);
 
   const hasFilters = Boolean(query || category !== "全部" || tag !== "全部");
   const reset = () => {
@@ -59,7 +58,7 @@ export function PostsExplorer({ posts }: { posts: PostMeta[] }) {
             id="archive-search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="搜索标题、描述、分类或标签"
+            placeholder="搜索标题、正文、分类或标签"
           />
           {query ? <button type="button" onClick={() => setQuery("")} aria-label="清空搜索"><X size={18} /></button> : null}
         </div>
@@ -105,8 +104,8 @@ export function PostsExplorer({ posts }: { posts: PostMeta[] }) {
         </div>
       ) : (
         <EmptyState
-          title="没有找到匹配的文章"
-          description="换一个关键词或清除筛选条件后再试试。"
+          title={loading ? "正在搜索…" : error ? "搜索索引加载失败" : "没有找到匹配的文章"}
+          description={error ? "请刷新页面后重试。" : "换一个关键词或清除筛选条件后再试试。"}
         />
       )}
     </section>

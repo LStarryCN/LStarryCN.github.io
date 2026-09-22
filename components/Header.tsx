@@ -28,6 +28,7 @@ import {
 import { CurrentTime } from "@/components/CurrentTime";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { formatDate, postHref } from "@/lib/format";
+import { HighlightSnippet, useFullTextSearch } from "@/lib/search";
 import { siteConfig } from "@/siteConfig";
 import type { PostMeta } from "@/types/content";
 
@@ -109,22 +110,16 @@ function SearchDialog({
   onClose: () => void;
 }) {
   const [query, setQuery] = useState("");
+  const [activeIndex, setActiveIndex] = useState(0);
   const panelRef = useDialogFocus(open, onClose);
   const normalized = query.trim().toLocaleLowerCase("zh-CN");
-  const matches = useMemo(() => {
-    const candidates = normalized
-      ? posts.filter((post) =>
-          [post.title, post.description, post.category, post.subcategory || "", ...post.tags]
-            .join(" ")
-            .toLocaleLowerCase("zh-CN")
-            .includes(normalized),
-        )
-      : posts;
-    return candidates.slice(0, 6);
-  }, [normalized, posts]);
+  const { results, loading, error } = useFullTextSearch(query, 6);
+  const matches = normalized ? results : posts.slice(0, 6).map((entry) => ({
+    entry, snippet: entry.description,
+  }));
 
   useEffect(() => {
-    if (!open) setQuery("");
+    if (!open) { setQuery(""); setActiveIndex(0); }
   }, [open]);
 
   if (!open) return null;
@@ -147,7 +142,11 @@ function SearchDialog({
           <div><span>站内搜索</span><h2 id="search-dialog-title">找到想读的记录</h2></div>
           <button type="button" onClick={onClose} aria-label="关闭搜索"><X size={21} /></button>
         </header>
-        <form action="/posts/" className="global-search-form" role="search">
+        <form className="global-search-form" role="search" onSubmit={(event) => {
+          event.preventDefault();
+          const selected = matches[activeIndex];
+          window.location.assign(selected ? postHref(selected.entry.slug) : `/posts/?q=${encodeURIComponent(query.trim())}`);
+        }}>
           <Search size={21} aria-hidden="true" />
           <label className="sr-only" htmlFor="global-search-input">搜索文章</label>
           <input
@@ -155,21 +154,35 @@ function SearchDialog({
             id="global-search-input"
             name="q"
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="搜索标题、分类或标签"
+            onChange={(event) => { setQuery(event.target.value); setActiveIndex(0); }}
+            onKeyDown={(event) => {
+              if ((event.key === "ArrowDown" || event.key === "ArrowUp") && matches.length) {
+                event.preventDefault();
+                setActiveIndex((current) => (current + (event.key === "ArrowDown" ? 1 : -1) + matches.length) % matches.length);
+              }
+            }}
+            placeholder="搜索标题、正文或标签"
             autoComplete="off"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-controls="global-search-results"
+            aria-expanded={matches.length > 0}
+            aria-activedescendant={matches.length ? `search-result-${activeIndex}` : undefined}
           />
           <kbd>Esc</kbd>
         </form>
         <div className="search-result-label">{normalized ? "搜索结果" : "最近文章"}</div>
-        <div className="global-search-results">
-          {matches.length ? matches.map((post) => (
-            <Link href={postHref(post.slug)} onClick={onClose} key={post.slug} prefetch={false}>
-              <span><strong>{post.title}</strong><small>{post.description}</small></span>
-              <span className="search-result-meta">{post.subcategory || post.category}<ArrowUpRight size={16} /></span>
+        <div className="global-search-results" id="global-search-results" role="listbox" aria-label="搜索结果">
+          {matches.length ? matches.map(({ entry, snippet }, index) => (
+            <Link href={postHref(entry.slug)} onClick={onClose} onMouseEnter={() => setActiveIndex(index)}
+              id={`search-result-${index}`} role="option" aria-selected={index === activeIndex}
+              key={entry.slug} prefetch={false}>
+              <span><strong>{entry.title}</strong><small>{entry.subcategory || entry.category}{entry.tags.length ? ` · ${entry.tags.join(" · ")}` : ""}</small>
+                <small className="search-snippet"><HighlightSnippet text={snippet} query={query} /></small></span>
+              <span className="search-result-meta"><ArrowUpRight size={16} /></span>
             </Link>
           )) : (
-            <p>没有匹配的文章。可以换一个关键词，或前往文章归档继续筛选。</p>
+            <p>{loading ? "正在搜索…" : error ? "搜索索引加载失败，请稍后重试。" : "没有匹配的文章。可以换一个关键词，或前往文章归档继续筛选。"}</p>
           )}
         </div>
         <Link className="search-archive-link" href="/posts/" onClick={onClose} prefetch={false}>
@@ -249,7 +262,7 @@ function ProfileCard({
         </button>
         <div className="profile-main">
           <div className="profile-dialog-identity">
-            <img src="/images/avatar/lstarry-logo.jpeg" alt="" width="76" height="76" />
+            <img src="/images/avatar/lstarry-logo.jpeg" alt="" width="76" height="76" loading="lazy" decoding="async" />
             <div>
               <span>个人资料</span>
               <h2 id="profile-dialog-title">LStarry</h2>

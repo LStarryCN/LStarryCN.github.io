@@ -11,6 +11,9 @@ export type PostMeta = {
   featured: boolean;
   draft: boolean;
   readingTime: number;
+  series?: string;
+  seriesOrder?: number;
+  seriesSlug?: string;
 };
 
 export type TocItem = {
@@ -25,12 +28,26 @@ export type Post = PostMeta & {
   toc: TocItem[];
 };
 
+export type ProjectImage = { src: string; alt: string; caption?: string };
+export type ProjectFeature = { title: string; description: string };
+
 export type Project = {
-  name: string;
+  slug: string;
+  title: string;
+  subtitle?: string;
   description: string;
-  tech: string[];
+  year: number;
+  status: "active" | "completed" | "archived";
+  technologies: string[];
   github?: string;
   demo?: string;
   cover?: string;
-  status: "planning" | "active" | "complete" | "paused";
+  coverAlt?: string;
+  featured?: boolean;
+  why?: string;
+  challenge?: string;
+  solution?: string;
+  features?: ProjectFeature[];
+  implementation?: string;
+  gallery?: ProjectImage[];
 };

@@ -15,7 +15,7 @@ export default function AboutPage() {
     <div className="page-shell inner-page about-page">
       <section className="about-card glass-card">
         <div className="about-identity">
-          <div className="about-mark"><img src="/images/avatar/lstarry-logo.jpeg" alt="" width="88" height="88" /></div>
+          <div className="about-mark"><img src="/images/avatar/lstarry-logo.jpeg" alt="" width="88" height="88" loading="lazy" decoding="async" /></div>
           <div><span className="section-kicker">关于我</span><h1>{siteConfig.name}</h1><p>{siteConfig.role}</p></div>
         </div>
         <div className="about-copy">

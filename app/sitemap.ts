@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { projects } from "@/data/projects";
 import { getAllPosts } from "@/lib/posts";
 import { topics } from "@/lib/topics";
 import { siteConfig } from "@/siteConfig";
@@ -7,13 +8,19 @@ export const dynamic = "force-static";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
-  const staticPages = ["", "/posts/", "/projects/", "/about/"];
+  const staticPages = ["", "/posts/", "/projects/", "/about/", "/series/"];
   return [
     ...staticPages.map((path) => ({
       url: `${siteConfig.url}${path}`,
       lastModified: now,
       changeFrequency: path === "" ? "weekly" as const : "monthly" as const,
       priority: path === "" ? 1 : 0.8,
+    })),
+    ...projects.map((project) => ({
+      url: `${siteConfig.url}/projects/${project.slug}/`,
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
     })),
     ...topics.map((topic) => ({
       url: `${siteConfig.url}/topics/${topic.segments.join("/")}/`,

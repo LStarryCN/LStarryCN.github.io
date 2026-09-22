@@ -14,7 +14,7 @@ export function PostCard({ post, featured = false }: { post: PostMeta; featured?
     <article className={cardClassName}>
       {post.cover ? (
         <Link className="post-cover" href={postHref(post.slug)} aria-label={`阅读：${post.title}`} prefetch={false}>
-          <img src={post.cover} alt="" />
+          <img src={post.cover} alt="" loading="lazy" decoding="async" />
           <span className="post-category">{post.subcategory || post.category}</span>
         </Link>
       ) : null}

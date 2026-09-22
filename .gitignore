@@ -1,6 +1,11 @@
 node_modules/
 .next/
 out/
+public/search-index.json
+public/image-manifest.json
+public/images/optimized/
+public/images/backgrounds/lstarry-bg-*.avif
+public/images/backgrounds/lstarry-bg-*.webp
 .deploy*/
 db.json
 *.log
