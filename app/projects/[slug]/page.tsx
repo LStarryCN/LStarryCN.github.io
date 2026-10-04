@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
@@ -97,7 +98,7 @@ export default async function ProjectPage({ params }: Props) {
       </CaseSection> : null}
 
       <nav className="case-navigation" aria-label="项目导航">
-        <a href="/projects/"><ArrowLeft size={18} /> 返回项目</a>
+        <Link href="/projects/"><ArrowLeft size={18} /> 返回项目</Link>
         {next ? <a href={`/projects/${next.slug}/`} className="case-next"><span><small>下一个项目</small>{next.title}</span><ArrowRight size={18} /></a> : null}
       </nav>
     </article>

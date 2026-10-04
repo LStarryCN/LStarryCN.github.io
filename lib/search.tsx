@@ -60,7 +60,8 @@ export function useFullTextSearch(query: string, limit = 100) {
   useEffect(() => {
     if (!active) return;
     let cancelled = false;
-    loadIndex().then((value) => { if (!cancelled) setEntries(value); })
+    setError(false);
+    loadIndex().then((value) => { if (!cancelled) { setEntries(value); setError(false); } })
       .catch(() => { if (!cancelled) setError(true); });
     return () => { cancelled = true; };
   }, [active]);

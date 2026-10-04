@@ -7,9 +7,8 @@ type Theme = "light" | "dark";
 
 function detectTheme(): Theme {
   if (typeof window === "undefined") return "light";
-  const saved = window.localStorage.getItem("lstarry-theme");
-  if (saved === "light" || saved === "dark") return saved;
-  return "light";
+  const current = document.documentElement.dataset.theme;
+  return current === "dark" ? "dark" : "light";
 }
 
 export function ThemeToggle({ expanded = false }: { expanded?: boolean }) {
@@ -17,11 +16,18 @@ export function ThemeToggle({ expanded = false }: { expanded?: boolean }) {
 
   useEffect(() => {
     const sync = () => setTheme(detectTheme());
+    const syncStorage = (event: StorageEvent) => {
+      if (event.key !== "lstarry-theme" && event.key !== null) return;
+      const next = event.newValue === "dark" ? "dark" : "light";
+      document.documentElement.dataset.theme = next;
+      document.documentElement.style.colorScheme = next;
+      sync();
+    };
     sync();
-    window.addEventListener("storage", sync);
+    window.addEventListener("storage", syncStorage);
     window.addEventListener("lstarry-theme", sync);
     return () => {
-      window.removeEventListener("storage", sync);
+      window.removeEventListener("storage", syncStorage);
       window.removeEventListener("lstarry-theme", sync);
     };
   }, []);
@@ -30,7 +36,11 @@ export function ThemeToggle({ expanded = false }: { expanded?: boolean }) {
     const next = theme === "dark" ? "light" : "dark";
     document.documentElement.dataset.theme = next;
     document.documentElement.style.colorScheme = next;
-    window.localStorage.setItem("lstarry-theme", next);
+    try {
+      window.localStorage.setItem("lstarry-theme", next);
+    } catch {
+      // Privacy settings can deny storage; the current page still switches themes.
+    }
     setTheme(next);
     window.dispatchEvent(new Event("lstarry-theme"));
   };

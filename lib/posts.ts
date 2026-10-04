@@ -12,10 +12,11 @@ import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import type { Post, PostMeta, TocItem } from "@/types/content";
 import { getImageAsset } from "@/lib/images";
+import { siteConfig } from "@/siteConfig";
 
 const postsDirectory = path.join(process.cwd(), "content", "posts");
 
-function dateString(value: unknown): string {
+export function dateString(value: unknown): string {
   if (value instanceof Date) return value.toISOString().slice(0, 10);
   if (typeof value === "string" && value.trim()) return value.trim().slice(0, 10);
   return "1970-01-01";
@@ -86,14 +87,30 @@ function extractToc(html: string): TocItem[] {
   );
 }
 
+function safeUrl(value: string, image = false): boolean {
+  try {
+    const protocol = new URL(value, siteConfig.url).protocol;
+    return (image ? ["http:", "https:"] : ["http:", "https:", "mailto:", "tel:"]).includes(protocol);
+  } catch {
+    return false;
+  }
+}
+
 function responsiveImages(slug: string) {
   return () => (tree: { type: string; tagName?: string; properties?: Record<string, unknown>; children?: unknown[] }) => {
     const walk = (node: typeof tree) => {
       if (!node.children) return;
       node.children = node.children.map((child) => {
         const image = child as typeof tree;
+        if (image.tagName === "a" && image.properties?.href && !safeUrl(String(image.properties.href))) {
+          delete image.properties.href;
+        }
         if (image.tagName !== "img") { walk(image); return image; }
         const src = String(image.properties?.src || "");
+        if (!safeUrl(src, true)) {
+          if (image.properties) delete image.properties.src;
+          return image;
+        }
         const asset = getImageAsset(slug, src);
         image.properties = { ...image.properties, loading: "lazy", decoding: "async" };
         if (!asset) return image;
@@ -116,7 +133,7 @@ function responsiveImages(slug: string) {
   };
 }
 
-async function renderMarkdown(content: string, slug: string) {
+export async function renderMarkdown(content: string, slug: string) {
   return String(
     await unified()
       .use(remarkParse)

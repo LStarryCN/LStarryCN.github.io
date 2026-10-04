@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { projects } from "@/data/projects";
 import { getAllPosts } from "@/lib/posts";
+import { postHref } from "@/lib/format";
 import { topics } from "@/lib/topics";
 import { siteConfig } from "@/siteConfig";
 
@@ -35,8 +36,4 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.75,
     })),
   ];
-}
-
-function postHref(slug: string) {
-  return `/posts/${slug}/`;
 }

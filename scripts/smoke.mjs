@@ -12,9 +12,9 @@ function loadTypeScript(file) {
   const code = ts.transpileModule(source, { compilerOptions: {
     module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, target: ts.ScriptTarget.ES2022,
   } }).outputText;
-  const module = { exports: {} };
-  new Function("require", "module", "exports", code)(require, module, module.exports);
-  return module.exports;
+  const loaded = { exports: {} };
+  new Function("require", "module", "exports", code)(require, loaded, loaded.exports);
+  return loaded.exports;
 }
 
 const { getRelatedPosts } = loadTypeScript("lib/related.ts");
@@ -34,6 +34,25 @@ const titleMatch = { ...bodyMatch, slug: "title", title: "Link tree", plainText:
 assert.deepEqual(searchEntries([bodyMatch, titleMatch], "link tree").map(({ entry }) => entry.slug), ["title", "body"]);
 
 const index = JSON.parse(fs.readFileSync(path.join(root, "out", "search-index.json"), "utf8"));
+// Read expectations from Next's build metadata, so completely missing output is detected.
+const prerender = JSON.parse(fs.readFileSync(path.join(root, ".next", "prerender-manifest.json"), "utf8"));
+let segmentCount = 0;
+for (const [route, page] of Object.entries(prerender.routes)) {
+  if (page.routeType !== "page" || route === "/_global-error") continue;
+  const output = path.join(root, "out", route.slice(1));
+  assert(fs.existsSync(path.join(output, "index.html")), `Missing static page: ${route}`);
+  assert(fs.existsSync(path.join(output, "index.txt")), `Missing static payload: ${route}`);
+  const metadata = JSON.parse(fs.readFileSync(
+    path.join(root, ".next", "server", "app", page.dataRoute.slice(1).replace(/\.rsc$/, ".meta")), "utf8",
+  ));
+  assert(metadata.segmentPaths?.length > 0, `Missing segment metadata: ${route}`);
+  for (const segment of metadata.segmentPaths) {
+    const requested = path.join(output, `__next${segment.replaceAll("/", ".")}.txt`);
+    assert(fs.existsSync(requested), `Missing static segment: ${requested}`);
+    segmentCount += 1;
+  }
+}
+assert(segmentCount > 0, "No static segment expectations found in the build metadata");
 assert(index.some((entry) => entry.plainText.includes("复杂度")));
 for (const width of [1440, 1920, 2880]) {
   for (const format of ["avif", "webp"]) {
@@ -71,4 +90,4 @@ for (const name of ["blog-cover.png", "edge-startpage-cover.png"]) {
     }
   }
 }
-console.log("Smoke checks PASS: search, related, series, project detail routes, sitemap and images");
+console.log(`Smoke checks PASS: ${segmentCount} static segments, search, related, series, project detail routes, sitemap and images`);

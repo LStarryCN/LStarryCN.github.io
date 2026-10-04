@@ -1,0 +1,41 @@
+name: Bug Report
+description: 报告可复现的问题
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: 问题出现在哪个页面？发生了什么？请勿附上敏感信息。
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. 打开页面\n2. 点击…\n3. 出现…"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Browser / Device
+      placeholder: 浏览器版本、操作系统、设备或屏幕尺寸
+    validations:
+      required: true
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot
+      description: 如有帮助，可拖入截图。
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context

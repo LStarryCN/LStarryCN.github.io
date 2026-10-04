@@ -11,3 +11,16 @@ db.json
 *.log
 *.tsbuildinfo
 .DS_Store
+
+# Local configuration, diagnostics, and test output
+.env*
+!.env.example
+coverage/
+playwright-report/
+test-results/
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
+*.tmp
+*.swp
